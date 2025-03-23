@@ -4,8 +4,6 @@ $nama = $email = $nomor = $mobil = $alamat = "";
 $namaErr = $emailErr = $nomorErr = $alamatErr = "";
 
 include_once("config.php");
-$result = mysqli_query($mysqli, "SELECT * FROM users ORDER BY id DESC");
-
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Validasi Nama
@@ -36,19 +34,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Menyimpan pilihan mobil tanpa validasi khusus
     $mobil = $_POST["mobil"];
+
+    // Jika tidak ada error, simpan data ke database
+    if (!$namaErr && !$emailErr && !$nomorErr && !$alamatErr) {
+        $sql = "INSERT INTO users (nama, email, nomor, mobil, alamat) VALUES (?, ?, ?, ?, ?)";
+        $stmt = mysqli_prepare($mysqli, $sql);
+        if ($stmt) {
+            mysqli_stmt_bind_param($stmt, "sssss", $nama, $email, $nomor, $mobil, $alamat);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+        } else {
+            echo "Error: " . mysqli_error($mysqli);
+        }
+    }
 }
+
+$result = mysqli_query($mysqli, "SELECT * FROM users ORDER BY id DESC");
 ?>
 
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Form Pembelian Mobil</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
     <div class="container">
         <h2>Form Pembelian Mobil</h2>
@@ -76,8 +87,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <select id="mobil" name="mobil">
                     <option value="Sedan" <?php echo ($mobil == "Sedan") ? "selected" : ""; ?>>Sedan</option>
                     <option value="SUV" <?php echo ($mobil == "SUV") ? "selected" : ""; ?>>SUV</option>
-                    <option value="Hatchback" <?php echo ($mobil == "Hatchback") ? "selected" : ""; ?>>Hatchback
-                    </option>
+                    <option value="Hatchback" <?php echo ($mobil == "Hatchback") ? "selected" : ""; ?>>Hatchback</option>
                 </select>
             </div>
 
@@ -93,33 +103,34 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </form>
     </div>
 
-    <?php if ($_SERVER["REQUEST_METHOD"] == "POST" && !$namaErr && !$emailErr && !$nomorErr && !$alamatErr) { ?>
     <div class="container">
-        <h3>Data Pembelian:</h3>
+        <h3>Data Pembelian</h3>
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th width="20%">Nama</th>
-                        <th width="20%">Email</th>
-                        <th width="15%">Nomor Telepon</th>
-                        <th width="15%">Mobil</th>
-                        <th width="30%">Alamat Pengiriman</th>
+                        <th width="10%">ID</th>
+                        <th width="18%">Nama</th>
+                        <th width="18%">Email</th>
+                        <th width="14%">Nomor Telepon</th>
+                        <th width="14%">Mobil</th>
+                        <th width="26%">Alamat Pengiriman</th>
                     </tr>
                 </thead>
                 <tbody>
+                    <?php while($row = mysqli_fetch_assoc($result)) { ?>
                     <tr>
-                        <td><?php echo $nama; ?></td>
-                        <td><?php echo $email; ?></td>
-                        <td><?php echo $nomor; ?></td>
-                        <td><?php echo $mobil; ?></td>
-                        <td><?php echo $alamat; ?></td>
+                        <td><?php echo $row['id']; ?></td>
+                        <td><?php echo $row['nama']; ?></td>
+                        <td><?php echo $row['email']; ?></td>
+                        <td><?php echo $row['nomor']; ?></td>
+                        <td><?php echo $row['mobil']; ?></td>
+                        <td><?php echo $row['alamat']; ?></td>
                     </tr>
+                    <?php } ?>
                 </tbody>
             </table>
         </div>
     </div>
-    <?php } ?>
 </body>
-
 </html>
